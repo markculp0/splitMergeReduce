@@ -6,7 +6,7 @@
 # in the individual "df4" files.  Words with leading
 # and trailing dashes, excessive repeated characters,
 # the same word repeated in wrd1 and wrd2, and # signs
-# in between words are removed here.
+# between words are removed here.
 # ================================================
 # Remove dashes : wrd1
 sum(grepl("^-", df4$wrd1))
