@@ -4,22 +4,33 @@
 # Subset the merged data frame alphabetically
 # ===========================================
 
-# Total 33,496,870 rows
+# Total 33,496,870 rows - 1st run
+# Total 36,804,676 rows - 2nd run
 
+df <- readRDS("df.rds")
 
-dfAll <- readRDS("df.rds")
+#dfAll <- readRDS("df.rds")
+#df <- dfAll[10500000:12000000,] # For "g"
+#df <- dfAll[11500000:13500000,] # For "h"
+#df <- dfAll[13500000:15500000,] # For "i"
+#df <- dfAll[15000000:16000000,] # "j,k"
+#df <- dfAll[15500000:17000000,] # "l"
 
+# ------------------------------
+# Create an "g" df
 
-df <- dfAll[10500000:12000000,] # For "g"
+gL <- grepl("^g",df$wrd2)
+gDF <- df[gL,]
 
-df <- dfAll[11500000:13500000,] # For "h"
+# Remove single "g"
+aout <- grepl("^[g]$",gDF$wrd2)
+gDF <- gDF[!aout,]
 
-df <- dfAll[13500000:15500000,] # For "i"
+# Remove word ending in "-"
+aout <- grepl("[-]$",gDF$wrd2)
+gDF <- gDF[!aout,]
 
-df <- dfAll[15000000:16000000,] # "j,k"
-
-df <- dfAll[15500000:17000000,] # "l"
-
+saveRDS(gDF,"g.rds")
 
 # ------------------------------
 # Create an "h" df
@@ -28,17 +39,14 @@ hDF <- df[hL,]
 
 # Remove single "h"
 aout <- grepl("^[h]$",hDF$wrd2)
-t <- hDF[aout,]
-sum(aout)
 hDF <- hDF[!aout,]
 
 # Remove word ending in "-"
 aout <- grepl("[-]$",hDF$wrd2)
-t <- hDF[aout,]
-sum(aout)
 hDF <- hDF[!aout,]
 
-hL <- grepl("^h[a-f]",hDF$wrd2)
+# Subset  "h"
+hL <- grepl("^h[a-f]|^h-",hDF$wrd2)
 h1DF <- hDF[hL,]
 
 hL <- grepl("^h[g-z]",hDF$wrd2)
@@ -48,25 +56,16 @@ saveRDS(h1DF,"h1.rds")
 saveRDS(h2DF,"h2.rds")
 
 # ------------------------------
-# i:
-# ------------------------------
+# Create an "i" df
 
 dL <- grepl("^i",df$wrd2)
 DF <- df[dL,]
 
-# Remove single "letter"  NA 
-aout <- grepl("^[i]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
-DF <- DF[!aout,]
-
 # Remove word ending in "-"
 aout <- grepl("[-]$",DF$wrd3)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
-# Split into 3
+# Subset into 3 "i"
 dL <- grepl("^i$|^i[-|a-m]",DF$wrd2)
 i1DF <- DF[dL,]
 
@@ -88,22 +87,16 @@ DF <- df[dL,]
 
 # Remove single "letter"  
 aout <- grepl("^[j]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
-
 
 # Remove single "letter"  
 aout <- grepl("^[k]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
 # Remove word ending in "-"
 aout <- grepl("[-]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
+
 
 saveRDS(DF,"jk.rds")
 
@@ -125,7 +118,7 @@ t <- DF[aout,]
 sum(aout)
 DF <- DF[!aout,]
 
-dL <- grepl("^l[a-i]",DF$wrd2)
+dL <- grepl("^l[a-i]|^l-",DF$wrd2)
 l1DF <- DF[dL,]
 
 dL <- grepl("^l[j-z]",DF$wrd2)

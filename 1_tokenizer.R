@@ -20,16 +20,24 @@ library(readr)
 # blogsTxt = 899,288 lns; newsTxt = 77,259 lns; tweetsTxt = 2,360,148 lns
 
 
-# Set dir to move files to
-dir = "n1"
+# Read in blogs
+blogsTxt <- read_lines("../final/en_US/en_US.blogs.txt")
 
-# 1st 100K lns
-# blogsTxt <- read_lines("../final/en_US/en_US.blogs.txt",skip = 400000,n_max = 50000)
-#blogsTxt <- read_lines("../final/en_US/en_US.blogs.txt")
+num1 <- 1
+num2 <- 90000
+
+for (i in 1:10) {
+
+# Set dir to move files to
+dir <- paste("b",i,sep = "")
+dir.create(dir)
+
+blogsTxt <- blogsTxt[num1:num2]
+
 #blogsTxt <- blogsTxt[800001:899288]
-#blogsTxt <- iconv(blogsTxt, to = "latin1")
-#blogsTxt <- (blogsTxt[!is.na(blogsTxt)])
-#blogsTxt <-  paste(blogsTxt, collapse = " ")
+blogsTxt <- iconv(blogsTxt, to = "latin1")
+blogsTxt <- (blogsTxt[!is.na(blogsTxt)])
+blogsTxt <-  paste(blogsTxt, collapse = " ")
 
 # Read in one twitter text file directly
 #tweetsTxt <- readLines("../final/en_US/en_US.twitter.txt")
@@ -39,14 +47,14 @@ dir = "n1"
 #tweetsTxt <- paste(tweetsTxt, collapse = " ")
 
 # Read in one twitter text file directly
-newsTxt <- readLines("../final/en_US/en_US.news.txt")
-newsTxt <- newsTxt[35001:77259]
-newsTxt <- iconv(newsTxt, to = "latin1")
-newsTxt <- (newsTxt[!is.na(newsTxt)])
-newsTxt <- paste(newsTxt, collapse = " ")
+#newsTxt <- readLines("../final/en_US/en_US.news.txt")
+#newsTxt <- newsTxt[35001:77259]
+#newsTxt <- iconv(newsTxt, to = "latin1")
+#newsTxt <- (newsTxt[!is.na(newsTxt)])
+#newsTxt <- paste(newsTxt, collapse = " ")
 
 # Add text documents to corpus
-docs <- VCorpus(VectorSource(newsTxt))
+docs <- VCorpus(VectorSource(blogsTxt))
 
 # ====================
 # Process documents
@@ -62,18 +70,55 @@ wAll <- function(){
   close(con)
 }
 
+# Function to remove contractions
+rmContraction <- function(x){
+  x <- gsub("\\drd", " ", x) 
+  x <- gsub("\\dth", " ", x) 
+  x <- gsub("don't", "do not", x) 
+  x <- gsub("\\sdont\\s", " do not ", x) 
+  
+  x <- gsub("it's", "it is", x) 
+  x <- gsub("'twas", "it was", x)
+  x <- gsub("\\stwas\\s", "it was", x)
+  x <- gsub("'tis", "it is", x) 
+  
+  x <- gsub("won't", "will not", x)
+  x <- gsub("\\swont\\s", " will not ", x)
+  x <- gsub("can't", "can not", x) 
+  x <- gsub("\\scant\\s", " can not ", x)
+  
+  x <- gsub("let's", "let us", x) 
+  x <- gsub("\\slets\\s", " let us ", x) 
+  x <- gsub("that's", "that is", x)
+  x <- gsub("\\sthats\\s", " that is ", x)
+  
+  x <- gsub("'m\\s", " am ", x) 
+  x <- gsub("\\im\\s", " i am ", x)
+  x <- gsub("n't\\s", " not ", x) 
+  x <- gsub("\\sdont\\s", " do not ", x)
+  x <- gsub("\\swont\\s", " will not ", x)
+  x <- gsub("\\scant\\s", " can not ", x)
+  
+  x <- gsub("'re\\s", " are ", x) 
+  x <- gsub("'d\\s", " would ", x) 
+  x <- gsub("'ll\\s", " will ", x)
+  x <- gsub("'ve\\s", " have ", x)
+}
+
+# Remove contractions
+docs <- tm_map(docs, content_transformer(rmContraction))
+
 # Function to remove certain punctuation
 rmPunct <- function(x) {
-  x <- gsub("[\x7b-\xff]","",x)
-  # x <- gsub("[Ââð]","",x)
-  x <- gsub("(--)+","",x)
-  x <- gsub("'", "\001", x)
+  x <- gsub("[\x7b-\xff]","",x) # remove extended ascii chars
+  x <- gsub("'","",x)  # remove single quotes
+  x <- gsub("(--)+"," ",x)    # remove two or more dashes
   x <- gsub("(\\w)-(\\w)", "\\1\002\\2", x)  # preserve intra-word dashes
-  x <- gsub("#","\003", x)
-  x <- gsub("[[:punct:]]+", "", x)
-  x <- gsub("\001", "'", x, fixed = TRUE)
-  x <- gsub("\002", "-", x, fixed = TRUE)
-  x <- gsub("\003", "#", x, fixed = TRUE)
+  x <- gsub("#\\w+"," ", x)  # remove hash tags
+  x <- gsub("(\\w+)#(\\s)"," ",x) # words w trailing pounds 
+  x <- gsub("(\\w+)#(\\w+)"," ",x)  # words w pounds between words
+  x <- gsub("[[:punct:]]+", " ", x)  # remove punctuation
+  x <- gsub("\002", "-", x, fixed = TRUE) # restore intra-word dash
 }
 
 # Remove punctuation
@@ -94,26 +139,23 @@ docs <- tm_map(docs, content_transformer(tolower))
 # Strip white space 
 docs <- tm_map(docs, stripWhitespace)
 
-# Function to remove certain punctuation
+# Function to remove certain oddities
 rmMisc <- function(x) {
-  x <- gsub("(\\s)-(\\s)","",x)
-  x <- gsub("(\\s)-(\\w)","",x)
-  x <- gsub("(\\s)#(\\s)","",x)
-  x <- gsub("(\\w)#(\\s)","",x)
-  x <- gsub("(\\w){35,}","",x)
-  x <- gsub("^-","",x)
-  x <- gsub("^##|^#-|^#$","",x)
-  x <- gsub("(.)\\1{5,}","",x)
-  x <- gsub("(\\w)#(\\w)","",x)
+  x <- gsub("(\\s)-(\\s)"," ",x) # Solo dashes
+  x <- gsub("(\\s)-(\\w)"," \\2",x) # Leading dashes
+  x <- gsub("(\\w)-(\\s)","\\1 ",x) # Trailing dashes
+  x <- gsub("(\\w){35,}"," ",x) # Words > 35 chars
+  x <- gsub("\\w+(.)\\1{5,}\\w+"," ",x) # Words with repeated single chars
+  x <- gsub("\\w+(.)(.)(\\1\\2){5,}\\w+","",x) # Words with repeated alt chars
 }
-
-# Remove misc punctuation
+  
+# Remove misc oddities
 docs <- tm_map(docs, content_transformer(rmMisc))  
 
 # Treat as plain text document
 docs <- tm_map(docs, PlainTextDocument)
 
-wAll()
+# wAll()
 
 # ===========================================
 # Create and Examine the Term-Document Matrix
@@ -122,18 +164,17 @@ wAll()
 library(RWeka)
 library(SnowballC)
 
-
 # Create Tokenizer Functions
 BigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 2, max = 2))
 TrigramTokenizer <- function(x) NGramTokenizer(x, Weka_control(min = 3, max = 3))
 
 # Create tdm2
-#tdm2 <- TermDocumentMatrix(docs, control = list(tokenize = BigramTokenizer))
+tdm2 <- TermDocumentMatrix(docs, control = list(tokenize = BigramTokenizer))
 
 # Write tdm2 to CSV file
-#tdMtrx2 <- as.matrix(tdm2)
-#write.csv(tdMtrx2, file = "tdm2.csv")
-#saveRDS(tdm2, file = "tdm2.rds")
+tdMtrx2 <- as.matrix(tdm2)
+write.csv(tdMtrx2, file = "tdm2.csv")
+saveRDS(tdm2, file = "tdm2.rds")
 
 # Create tdm3
 tdm3 <- TermDocumentMatrix(docs, control = list(tokenize = TrigramTokenizer))
@@ -155,3 +196,7 @@ file.remove("tdm2.rds")
 file.copy("tdm3.rds",dir)
 file.remove("tdm3.rds")
 
+num1 <- num1 + 90000
+num2 <- num2 + 90000
+
+}

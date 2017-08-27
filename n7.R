@@ -4,17 +4,35 @@
 # Subset the merged data frame alphabetically
 # ===========================================
 
-# Total 33,496,870 rows
+# Total 33,496,870 rows - 1st run
+# Total 36,804,676 rows - 2nd run
 
-dfAll <- readRDS("df.rds")
+df <- readRDS("df.rds")
 
+#dfAll <- readRDS("df.rds")
+#df <- dfAll[30000000:31000000,]  # "uv"
+#df <- dfAll[32000000:33000000,]  # "w"
+#df <- dfAll[32000000:33496870,]  # "xyz"
 
-df <- dfAll[30000000:31000000,]  # "uv"
+# ------------------------------------
+# uv
 
-df <- dfAll[32000000:33000000,]  # "w"
+dL <- grepl("^u|^v",df$wrd2)
+DF <- df[dL,]
 
-df <- dfAll[32000000:33496870,]  # "xyz"
+# Remove single "letter u"  
+aout <- grepl("^[u]$",DF$wrd2)
+DF <- DF[!aout,]
 
+# Remove single "letter v"  
+aout <- grepl("^[v]$",DF$wrd2)
+DF <- DF[!aout,]
+
+# Remove word ending in "-"
+aout <- grepl("[-]$",DF$wrd2)
+DF <- DF[!aout,]
+
+saveRDS(DF,"uv.rds")
 
 # ------------------------------
 # w
@@ -24,14 +42,10 @@ DF <- df[dL,]
 
 # Remove single "letter"  
 aout <- grepl("^[w]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
 # Remove word ending in "-"
 aout <- grepl("[-]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
 dL <- grepl("^w-|^w[a-e]",DF$wrd2)
@@ -47,28 +61,29 @@ saveRDS(w1DF,"w1.rds")
 saveRDS(w2DF,"w2.rds")
 saveRDS(w3DF,"w3.rds")
 
-rm(DF,df,t,aout,dL)
-
 # ------------------------------
 # xyz
 
 dL <- grepl("^[xyz]",df$wrd2)
 DF <- df[dL,]
 
-# Remove single "letter"  
+# Remove single "letter x"  
+aout <- grepl("^[x]$",DF$wrd2)
+DF <- DF[!aout,]
+
+# Remove single "letter y"  
+aout <- grepl("^[y]$",DF$wrd2)
+DF <- DF[!aout,]
+
+# Remove single "letter z"  
 aout <- grepl("^[z]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
 # Remove word ending in "-"
 aout <- grepl("[-]$",DF$wrd2)
-t <- DF[aout,]
-sum(aout)
 DF <- DF[!aout,]
 
 xyz <- DF
 
 saveRDS(xyz,"xyz.rds")
 
-rm(DF,df,t,aout,dL)

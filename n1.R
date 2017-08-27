@@ -6,16 +6,10 @@
 
 # Total 33,496,870 rows
 
-dfAll <- readRDS("df.rds")
+df <- readRDS("df.rds")
 
-df <- dfAll[1:3600000,]
-
-# Create hashTag df
-hashTagL <- grepl("^#",df$wrd2)
-hashTag <- df[hashTagL,]
-rm(hashTagL)
-
-saveRDS(hashTag, "hashTag.rds")
+#dfAll <- readRDS("df.rds")
+#mdf <- dfAll[1:3600000,]
 
 # ------------------------------
 # Create "aa" df
@@ -24,15 +18,17 @@ aa <- df[aaL,]
 
 saveRDS(aa,"aa.rds")
 
-# Create an "a1" df
+# ------------------------------
+# Create "a1" df
+
 amL <- grepl("^a[a-m]",df$wrd2)
 a1 <- df[amL,]
 
+# Remove double "a"
 aout <- grepl("^aa\\b",a1$wrd2)
-t <- a1[aout,]
-sum(aout)
 a1 <- a1[!aout,]
 
+# Remove tiple "a" and greater
 aout <- grepl("^aaa+",a1$wrd2)
 a1 <- a1[!aout,]
 
@@ -53,4 +49,5 @@ aoL <- grepl("^a[o-z]",df$wrd2)
 a3 <- df[aoL,]
 
 saveRDS(a3,"a3.rds")
+
 # ------------------------------
